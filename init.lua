@@ -93,7 +93,7 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
--- [[ Setting options ]]
+-- [[ Setting options ]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -154,7 +154,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 9999
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -162,6 +162,14 @@ vim.opt.scrolloff = 10
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+-- Remapping for centering cursor. Might be jarring (will see)
+-- vim.api.nvim_set_keymap('n', 'j', 'jzz', { noremap = true })
+-- vim.api.nvim_set_keymap('n', 'k', 'kzz', { noremap = true })
+-- vim.api.nvim_set_keymap('n', 'K', 'Gzz', { noremap = true })
+-- vim.api.nvim_set_keymap('n', 'gg', 'ggzz', { noremap = true })
+-- vim.api.nvim_set_keymap('n', '}', '}zz', { noremap = true })
+-- vim.api.nvim_set_keymap('n', '{', '{zz', { noremap = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -172,14 +180,14 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 --
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
+-- vim.keymap.set({ 'n', 'v' }, '<leader>st', require('stay-centered').toggle, { desc = 'Toggle stay-centered.nvim' })
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
@@ -229,7 +237,6 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
@@ -254,6 +261,47 @@ require('lazy').setup({
       },
     },
   },
+
+  -- Custom Parameters (with defaults)
+  {
+    'David-Kunz/gen.nvim',
+    opts = {
+      model = 'deepseek-r1:32b', -- The default model to use.
+      quit_map = 'q', -- set keymap to close the response window
+      retry_map = '<c-r>', -- set keymap to re-send the current prompt
+      accept_map = '<c-cr>', -- set keymap to replace the previous selection with the last result
+      host = 'localhost', -- The host running the Ollama service.
+      port = '11434', -- The port on which the Ollama service is listening.
+      display_mode = 'float', -- The display mode. Can be "float" or "split" or "horizontal-split".
+      show_prompt = false, -- Shows the prompt submitted to Ollama. Can be true (3 lines) or "full".
+      show_model = false, -- Displays which model you are using at the beginning of your chat session.
+      no_auto_close = false, -- Never closes the window automatically.
+      file = false, -- Write the payload to a temporary file to keep the command short.
+      hidden = false, -- Hide the generation window (if true, will implicitly set `prompt.replace = true`), requires Neovim >= 0.10
+      init = function(options)
+        pcall(io.popen, 'ollama serve > /dev/null 2>&1 &')
+      end,
+      -- Function to initialize Ollama
+      command = function(options)
+        local body = { model = options.model, stream = true }
+        return 'curl --silent --no-buffer -X POST http://' .. options.host .. ':' .. options.port .. '/api/chat -d $body'
+      end,
+      -- The command for the Ollama service. You can use placeholders $prompt, $model and $body (shellescaped).
+      -- This can also be a command string.
+      -- The executed command must return a JSON object with { response, context }
+      -- (context property is optional).
+      -- list_models = '<omitted lua function>', -- Retrieves a list of model names
+      result_filetype = 'markdown', -- Configure filetype of the result buffer
+      debug = false, -- Prints errors and the command which is run.
+    },
+  },
+  --  {
+  --    'arnamak/stay-centered.nvim',
+  --    lazy = false,
+  --    opts = {
+  --      skip_filetypes = { 'lua', 'typescript' },
+  --    },
+  --  },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
@@ -932,7 +980,7 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
